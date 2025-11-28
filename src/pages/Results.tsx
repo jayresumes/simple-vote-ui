@@ -1,34 +1,62 @@
-import { useState } from "react";
-import { BarChart3, Users, Clock, RefreshCw, TrendingUp } from "lucide-react";
+import { useState, useEffect } from "react";
+import { BarChart3, Users, Clock, RefreshCw, TrendingUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
 import ResultBar from "@/components/results/ResultBar";
-
-const resultsData = [
-  { id: "1", name: "Sarah Johnson", party: "Progressive Party", votes: 45230 },
-  { id: "2", name: "Michael Chen", party: "Unity Coalition", votes: 38920 },
-  { id: "3", name: "Emily Rodriguez", party: "People's Alliance", votes: 28540 },
-  { id: "4", name: "David Williams", party: "Reform Movement", votes: 18750 },
-  { id: "5", name: "Amanda Foster", party: "Independent", votes: 12340 },
-];
+import { votingApi, type VoteResult } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const Results = () => {
+  const [results, setResults] = useState<VoteResult[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { toast } = useToast();
 
-  const totalVotes = resultsData.reduce((sum, candidate) => sum + candidate.votes, 0);
-  const sortedResults = [...resultsData].sort((a, b) => b.votes - a.votes);
-  const winnerId = sortedResults[0].id;
+  const fetchResults = async (showRefreshState = false) => {
+    if (showRefreshState) setIsRefreshing(true);
+    
+    try {
+      const data = await votingApi.getResults();
+      setResults(data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to load results",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchResults();
+  }, []);
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1500);
+    fetchResults(true);
   };
+
+  const totalVotes = results.reduce((sum, candidate) => sum + candidate.votes, 0);
+  const sortedResults = [...results].sort((a, b) => b.votes - a.votes);
+  const winner = sortedResults[0];
 
   const stats = [
     { label: "Total Votes", value: totalVotes.toLocaleString(), icon: Users },
-    { label: "Leading", value: sortedResults[0].name, icon: TrendingUp },
+    { label: "Leading", value: winner?.candidate_name || "-", icon: TrendingUp },
     { label: "Last Updated", value: "Just now", icon: Clock },
   ];
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container py-20 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -84,38 +112,40 @@ const Results = () => {
               </h2>
             </div>
 
-            <div className="space-y-4">
-              {sortedResults.map((candidate, index) => (
-                <div
-                  key={candidate.id}
-                  className="animate-slide-up"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <ResultBar
-                    name={candidate.name}
-                    party={candidate.party}
-                    votes={candidate.votes}
-                    totalVotes={totalVotes}
-                    isWinner={candidate.id === winnerId}
-                  />
-                </div>
-              ))}
-            </div>
+            {results.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                No results available yet.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {sortedResults.map((candidate, index) => (
+                  <div
+                    key={candidate.candidate_id}
+                    className="animate-slide-up"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <ResultBar
+                      name={candidate.candidate_name}
+                      party={candidate.party}
+                      votes={candidate.votes}
+                      totalVotes={totalVotes}
+                      isWinner={candidate.candidate_id === winner?.candidate_id}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
 
-            <div className="mt-8 rounded-lg bg-secondary p-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Votes Counted</span>
-                <span className="font-semibold text-foreground">
-                  {totalVotes.toLocaleString()} / 200,000 (estimated)
-                </span>
+            {totalVotes > 0 && (
+              <div className="mt-8 rounded-lg bg-secondary p-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Total Votes Cast</span>
+                  <span className="font-semibold text-foreground">
+                    {totalVotes.toLocaleString()}
+                  </span>
+                </div>
               </div>
-              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-border">
-                <div
-                  className="h-full rounded-full bg-primary transition-all duration-1000"
-                  style={{ width: `${(totalVotes / 200000) * 100}%` }}
-                />
-              </div>
-            </div>
+            )}
           </div>
 
           <div className="mt-8 rounded-lg bg-primary/10 p-4 text-center text-sm text-muted-foreground">

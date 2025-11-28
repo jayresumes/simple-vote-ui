@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
 import CandidateCard from "@/components/voting/CandidateCard";
@@ -16,46 +16,35 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-
-const candidates = [
-  {
-    id: "1",
-    name: "Sarah Johnson",
-    party: "Progressive Party",
-    description: "Committed to environmental sustainability, healthcare reform, and education funding.",
-  },
-  {
-    id: "2",
-    name: "Michael Chen",
-    party: "Unity Coalition",
-    description: "Focused on economic growth, infrastructure development, and job creation.",
-  },
-  {
-    id: "3",
-    name: "Emily Rodriguez",
-    party: "People's Alliance",
-    description: "Advocating for social justice, affordable housing, and community development.",
-  },
-  {
-    id: "4",
-    name: "David Williams",
-    party: "Reform Movement",
-    description: "Promoting government transparency, fiscal responsibility, and innovation.",
-  },
-  {
-    id: "5",
-    name: "Amanda Foster",
-    party: "Independent",
-    description: "Bringing fresh perspectives on healthcare, education, and civic engagement.",
-  },
-];
+import { votingApi, type Candidate } from "@/lib/api";
 
 const Vote = () => {
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedCandidate, setSelectedCandidate] = useState<string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        const data = await votingApi.getCandidates();
+        setCandidates(data);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to load candidates",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCandidates();
+  }, [toast]);
 
   const steps = [
     { label: "Select", completed: !!selectedCandidate, current: !selectedCandidate },
@@ -63,21 +52,40 @@ const Vote = () => {
     { label: "Complete", completed: false, current: false },
   ];
 
-  const handleVoteSubmit = () => {
+  const handleVoteSubmit = async () => {
+    if (!selectedCandidate) return;
+    
     setIsSubmitting(true);
-    // Simulate API call to Django backend
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const receipt = await votingApi.submitVote(selectedCandidate);
       setShowConfirmDialog(false);
       toast({
         title: "Vote Submitted Successfully!",
         description: "Thank you for participating in the election.",
       });
-      navigate("/confirmation");
-    }, 2000);
+      navigate("/confirmation", { state: { receipt } });
+    } catch (error) {
+      toast({
+        title: "Vote Failed",
+        description: error instanceof Error ? error.message : "Failed to submit vote",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const selectedCandidateData = candidates.find((c) => c.id === selectedCandidate);
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container py-20 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -102,21 +110,30 @@ const Vote = () => {
               </p>
             </div>
 
-            <div className="space-y-4">
-              {candidates.map((candidate, index) => (
-                <div
-                  key={candidate.id}
-                  className="animate-slide-up"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <CandidateCard
-                    {...candidate}
-                    isSelected={selectedCandidate === candidate.id}
-                    onSelect={setSelectedCandidate}
-                  />
-                </div>
-              ))}
-            </div>
+            {candidates.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                No candidates available at this time.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {candidates.map((candidate, index) => (
+                  <div
+                    key={candidate.id}
+                    className="animate-slide-up"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <CandidateCard
+                      id={candidate.id}
+                      name={candidate.name}
+                      party={candidate.party}
+                      description={candidate.description}
+                      isSelected={selectedCandidate === candidate.id}
+                      onSelect={setSelectedCandidate}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="mt-8 flex justify-center">
               <Button

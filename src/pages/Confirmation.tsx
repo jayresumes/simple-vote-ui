@@ -1,12 +1,17 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { CheckCircle2, Home, BarChart3, Download, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
+import { type VoteReceipt } from "@/lib/api";
 
 const Confirmation = () => {
+  const location = useLocation();
+  const receipt = location.state?.receipt as VoteReceipt | undefined;
+
   const voteDetails = {
-    confirmationNumber: "EVT-2024-" + Math.random().toString(36).substring(2, 10).toUpperCase(),
-    timestamp: new Date().toLocaleString(),
+    confirmationNumber: receipt?.receipt_id || "N/A",
+    candidateName: receipt?.candidate_name || "N/A",
+    timestamp: receipt?.timestamp || new Date().toLocaleString(),
     election: "Presidential Election 2024",
   };
 
@@ -40,6 +45,10 @@ const Confirmation = () => {
                 <span className="font-mono font-semibold text-primary">
                   {voteDetails.confirmationNumber}
                 </span>
+              </div>
+              <div className="flex justify-between border-b border-border pb-2">
+                <span className="text-muted-foreground">Candidate</span>
+                <span className="font-medium text-foreground">{voteDetails.candidateName}</span>
               </div>
               <div className="flex justify-between border-b border-border pb-2">
                 <span className="text-muted-foreground">Election</span>
