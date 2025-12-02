@@ -241,7 +241,8 @@ const Vote = () => {
                             id={candidate.id.toString()}
                             name={candidate.name}
                             party="Independent"
-                            description={candidate.manifesto}
+                            description={candidate.bio || candidate.manifesto}
+                            image={candidate.image}
                             isSelected={selectedCandidate === candidate.id}
                             onSelect={(id) => setSelectedCandidate(parseInt(id))}
                           />

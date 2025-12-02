@@ -5,7 +5,9 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api"
 export interface Candidate {
   id: number;
   name: string;
+  bio?: string;
   manifesto?: string;
+  image?: string;
   category: number;
 }
 
@@ -22,6 +24,15 @@ export interface LoginCredentials {
   password: string;
 }
 
+export interface OTPRequest {
+  email: string;
+}
+
+export interface OTPVerification {
+  email: string;
+  otp: string;
+}
+
 export interface AuthResponse {
   token: string;
   user: {
@@ -36,6 +47,7 @@ export interface VoteReceipt {
   receipt_id: string;
   candidate_name: string;
   timestamp: string;
+  verification_hash: string;
 }
 
 export interface Election {
@@ -45,6 +57,10 @@ export interface Election {
   is_public: boolean;
   allowed_voters: any[];
   categories: any[];
+  status: 'draft' | 'active' | 'ended';
+  start_date?: string;
+  end_date?: string;
+  results_released: boolean;
 }
 
 export interface Category {
@@ -82,6 +98,18 @@ async function apiRequest<T>(
 
 // Auth API
 export const authApi = {
+  sendOTP: (data: OTPRequest) =>
+    apiRequest<{ message: string }>("/auth/send-otp/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  verifyOTP: (data: OTPVerification) =>
+    apiRequest<AuthResponse>("/auth/verify-otp/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
   login: (credentials: LoginCredentials) =>
     apiRequest<AuthResponse>("/auth/login/", {
       method: "POST",
@@ -132,6 +160,90 @@ export const candidateApi = {
 export const categoryApi = {
   getCategories: () =>
     apiRequest<Category[]>("/category/"),
+  
+  createCategory: (data: Omit<Category, 'id'>) =>
+    apiRequest<Category>("/category/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  
+  updateCategory: (id: number, data: Partial<Category>) =>
+    apiRequest<Category>(`/category/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+  
+  deleteCategory: (id: number) =>
+    apiRequest<void>(`/category/${id}/`, {
+      method: "DELETE",
+    }),
+};
+
+// Admin API
+export const adminApi = {
+  createElection: (data: Omit<Election, 'id'>) =>
+    apiRequest<Election>("/admin/election/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateElection: (id: number, data: Partial<Election>) =>
+    apiRequest<Election>(`/admin/election/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  startElection: (id: number) =>
+    apiRequest<Election>(`/admin/election/${id}/start/`, {
+      method: "POST",
+    }),
+
+  endElection: (id: number) =>
+    apiRequest<Election>(`/admin/election/${id}/end/`, {
+      method: "POST",
+    }),
+
+  releaseResults: (id: number) =>
+    apiRequest<Election>(`/admin/election/${id}/release-results/`, {
+      method: "POST",
+    }),
+
+  createCandidate: (data: Omit<Candidate, 'id'>) =>
+    apiRequest<Candidate>("/admin/candidate/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateCandidate: (id: number, data: Partial<Candidate>) =>
+    apiRequest<Candidate>(`/admin/candidate/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  deleteCandidate: (id: number) =>
+    apiRequest<void>(`/admin/candidate/${id}/`, {
+      method: "DELETE",
+    }),
+
+  uploadCandidateImage: (id: number, file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const token = localStorage.getItem("auth_token");
+    
+    return fetch(`${API_BASE_URL}/admin/candidate/${id}/upload-image/`, {
+      method: "POST",
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    }).then(async (response) => {
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: "Upload failed" }));
+        throw new Error(error.message || "Upload failed");
+      }
+      return response.json();
+    });
+  },
 };
 
 // Auth helpers

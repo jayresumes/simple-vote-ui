@@ -7,6 +7,7 @@ interface CandidateCardProps {
   party: string;
   description: string;
   imageUrl?: string;
+  image?: string;
   isSelected: boolean;
   onSelect: (id: string) => void;
 }
@@ -17,9 +18,11 @@ const CandidateCard = ({
   party,
   description,
   imageUrl,
+  image,
   isSelected,
   onSelect,
 }: CandidateCardProps) => {
+  const displayImage = image || imageUrl;
   return (
     <button
       onClick={() => onSelect(id)}
@@ -38,9 +41,9 @@ const CandidateCard = ({
 
       <div className="flex items-start gap-4">
         <div className="h-16 w-16 overflow-hidden rounded-full bg-secondary flex-shrink-0">
-          {imageUrl ? (
+          {displayImage ? (
             <img
-              src={imageUrl}
+              src={displayImage}
               alt={name}
               className="h-full w-full object-cover"
             />

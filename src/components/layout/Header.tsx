@@ -1,19 +1,20 @@
 import { Link, useLocation } from "react-router-dom";
-import { Vote, LogIn, BarChart3, Home } from "lucide-react";
+import { Vote, LogIn, BarChart3, Home, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import path from "path";
-import { Label } from "recharts";
+import { useAuth } from "@/hooks/useAuth";
 
 const Header = () => {
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   const navItems = [
     { path: "/", label: "Home", icon: Home },
     { path: "/vote", label: "Vote", icon: Vote },
     { path: "/results", label: "Results", icon: BarChart3 },
-    // {path: "/admin", Label: "Admin", icon:"🤵"},
   ];
+
+  const adminNavItem = { path: "/admin", label: "Admin", icon: Shield };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/80 backdrop-blur-md">
@@ -40,15 +41,36 @@ const Header = () => {
               </Button>
             </Link>
           ))}
+          {user?.email?.includes('@admin') && (
+            <Link to={adminNavItem.path}>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "gap-2",
+                  location.pathname === adminNavItem.path && "bg-secondary text-primary"
+                )}
+              >
+                <adminNavItem.icon className="h-4 w-4" />
+                {adminNavItem.label}
+              </Button>
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link to="/login">
-            <Button variant="outline" className="gap-2">
-              <LogIn className="h-4 w-4" />
-              <span className="hidden sm:inline">Login</span>
+          {user ? (
+            <Button variant="outline" className="gap-2" onClick={logout}>
+              <span className="hidden sm:inline">{user.name}</span>
+              <span className="sm:hidden">Logout</span>
             </Button>
-          </Link>
+          ) : (
+            <Link to="/login">
+              <Button variant="outline" className="gap-2">
+                <LogIn className="h-4 w-4" />
+                <span className="hidden sm:inline">Login</span>
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </header>

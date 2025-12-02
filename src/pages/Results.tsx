@@ -77,16 +77,16 @@ const Results = () => {
   const formattedLastUpdated = lastUpdatedAt
     ? new Date(lastUpdatedAt).toLocaleString()
     : "-";
-  const formattedElectionDate = election?.date
-    ? new Date(election.date).toLocaleDateString(undefined, {
+  const formattedElectionDate = election?.start_date
+    ? new Date(election.start_date).toLocaleDateString(undefined, {
         year: "numeric",
         month: "short",
         day: "numeric",
       })
     : null;
   const electionSubtitle = election
-    ? election.description || `${election.name}${formattedElectionDate ? ` • ${formattedElectionDate}` : ""}`
-    : "Presidential Election 2024 - Live Results";
+    ? election.description || `${election.title}${formattedElectionDate ? ` • ${formattedElectionDate}` : ""}`
+    : "Live Election Results";
 
   const stats = [
     { label: "Total Votes", value: totalVotes.toLocaleString(), icon: Users },

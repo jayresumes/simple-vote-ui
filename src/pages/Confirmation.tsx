@@ -46,6 +46,14 @@ const Confirmation = () => {
                   {voteDetails.confirmationNumber}
                 </span>
               </div>
+              {receipt?.verification_hash && (
+                <div className="flex flex-col border-b border-border pb-2 gap-1">
+                  <span className="text-muted-foreground">Verification Hash</span>
+                  <code className="font-mono text-xs text-foreground break-all bg-secondary px-2 py-1 rounded">
+                    {receipt.verification_hash}
+                  </code>
+                </div>
+              )}
               <div className="flex justify-between border-b border-border pb-2">
                 <span className="text-muted-foreground">Candidate</span>
                 <span className="font-medium text-foreground">{voteDetails.candidateName}</span>
