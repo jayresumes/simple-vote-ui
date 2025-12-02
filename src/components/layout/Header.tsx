@@ -2,6 +2,8 @@ import { Link, useLocation } from "react-router-dom";
 import { Vote, LogIn, BarChart3, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import path from "path";
+import { Label } from "recharts";
 
 const Header = () => {
   const location = useLocation();
@@ -10,6 +12,7 @@ const Header = () => {
     { path: "/", label: "Home", icon: Home },
     { path: "/vote", label: "Vote", icon: Vote },
     { path: "/results", label: "Results", icon: BarChart3 },
+    // {path: "/admin", Label: "Admin", icon:"🤵"},
   ];
 
   return (

@@ -70,6 +70,11 @@ const Index = () => {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
+            <Link to="/">
+            <Button variant="outline" size="lg" className="gap-2">
+              Admin
+            </Button>
+            </Link>
           </div>
         </div>
       </section>
