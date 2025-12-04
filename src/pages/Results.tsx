@@ -2,6 +2,13 @@ import { useState, useEffect } from "react";
 import { BarChart3, Users, Clock, RefreshCw, TrendingUp, Loader2, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Layout from "@/components/layout/Layout";
 import ResultBar from "@/components/results/ResultBar";
 import {
@@ -16,14 +23,41 @@ import { useToast } from "@/hooks/use-toast";
 
 const Results = () => {
   const [results, setResults] = useState<VoteResult[]>([]);
-  const [election, setElection] = useState<Election | null>(null);
+  const [elections, setElections] = useState<Election[]>([]);
+  const [selectedElectionId, setSelectedElectionId] = useState<number | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
 
-  const fetchResults = async (showRefreshState = false) => {
+  const selectedElection = elections.find((e) => e.id === selectedElectionId) || null;
+
+  const fetchElections = async () => {
+    try {
+      const [electionsData, categoriesData] = await Promise.all([
+        electionApi.getElections(),
+        categoryApi.getCategories(),
+      ]);
+      setElections(electionsData);
+      setCategories(categoriesData);
+
+      // Auto-select first election with released results, or first election
+      const releasedElection = electionsData.find((e) => e.results_released);
+      const firstElection = releasedElection || electionsData[0];
+      if (firstElection) {
+        setSelectedElectionId(firstElection.id);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load elections",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchResults = async (electionId: number, showRefreshState = false) => {
     if (showRefreshState) {
       setIsRefreshing(true);
     } else {
@@ -31,25 +65,8 @@ const Results = () => {
     }
 
     try {
-      const voteResults = await votingApi.getResults();
+      const voteResults = await votingApi.getResults(electionId);
       setResults(voteResults);
-
-      try {
-        const [electionsData, categoriesData] = await Promise.all([
-          electionApi.getElections(),
-          categoryApi.getCategories(),
-        ]);
-
-        setElection(electionsData[0] ?? null);
-        setCategories(categoriesData);
-      } catch (metadataError) {
-        console.error("Failed to load election metadata", metadataError);
-        toast({
-          title: "Election metadata unavailable",
-          description: "Results loaded, but election or category details could not be retrieved.",
-        });
-      }
-
       setLastUpdatedAt(new Date().toISOString());
     } catch (error) {
       toast({
@@ -64,11 +81,23 @@ const Results = () => {
   };
 
   useEffect(() => {
-    fetchResults();
+    fetchElections();
   }, []);
 
+  useEffect(() => {
+    if (selectedElectionId) {
+      fetchResults(selectedElectionId);
+    }
+  }, [selectedElectionId]);
+
   const handleRefresh = () => {
-    fetchResults(true);
+    if (selectedElectionId) {
+      fetchResults(selectedElectionId, true);
+    }
+  };
+
+  const handleElectionChange = (value: string) => {
+    setSelectedElectionId(Number(value));
   };
 
   const totalVotes = results.reduce((sum, candidate) => sum + candidate.votes, 0);
@@ -77,16 +106,17 @@ const Results = () => {
   const formattedLastUpdated = lastUpdatedAt
     ? new Date(lastUpdatedAt).toLocaleString()
     : "-";
-  const formattedElectionDate = election?.start_date
-    ? new Date(election.start_date).toLocaleDateString(undefined, {
+  const formattedElectionDate = selectedElection?.start_date
+    ? new Date(selectedElection.start_date).toLocaleDateString(undefined, {
         year: "numeric",
         month: "short",
         day: "numeric",
       })
     : null;
-  const electionSubtitle = election
-    ? election.description || `${election.title}${formattedElectionDate ? ` • ${formattedElectionDate}` : ""}`
-    : "Live Election Results";
+
+  const electionCategories = categories.filter(
+    (c) => c.election === selectedElectionId
+  );
 
   const stats = [
     { label: "Total Votes", value: totalVotes.toLocaleString(), icon: Users },
@@ -94,7 +124,7 @@ const Results = () => {
     { label: "Last Updated", value: formattedLastUpdated, icon: Clock },
   ];
 
-  if (isLoading) {
+  if (isLoading && elections.length === 0) {
     return (
       <Layout>
         <div className="container py-20 flex justify-center">
@@ -108,23 +138,57 @@ const Results = () => {
     <Layout>
       <div className="container py-8 md:py-12">
         <div className="mx-auto max-w-4xl">
-          <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-in">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground md:text-4xl">
-                Election Results
-              </h1>
-              <p className="mt-2 text-muted-foreground">
-                {electionSubtitle}
-              </p>
-              {(formattedElectionDate || categories.length > 0) && (
-                <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mb-8 flex flex-col gap-4 animate-fade-in">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground md:text-4xl">
+                  Election Results
+                </h1>
+                <p className="mt-2 text-muted-foreground">
+                  Select an election to view results
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={handleRefresh}
+                disabled={isRefreshing || !selectedElectionId}
+                className="gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+            </div>
+
+            {/* Election Selector */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <Select
+                value={selectedElectionId?.toString() || ""}
+                onValueChange={handleElectionChange}
+              >
+                <SelectTrigger className="w-full sm:w-[300px]">
+                  <SelectValue placeholder="Select an election" />
+                </SelectTrigger>
+                <SelectContent>
+                  {elections.map((election) => (
+                    <SelectItem key={election.id} value={election.id.toString()}>
+                      {election.title}
+                      {election.results_released && (
+                        <span className="ml-2 text-xs text-primary">(Results Released)</span>
+                      )}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {(formattedElectionDate || electionCategories.length > 0) && (
+                <div className="flex flex-wrap gap-2">
                   {formattedElectionDate && (
                     <Badge variant="outline" className="gap-1 text-muted-foreground">
                       <CalendarDays className="h-3 w-3" />
                       {formattedElectionDate}
                     </Badge>
                   )}
-                  {categories.map((category) => (
+                  {electionCategories.map((category) => (
                     <Badge key={category.id} variant="secondary">
                       {category.name}
                     </Badge>
@@ -132,15 +196,6 @@ const Results = () => {
                 </div>
               )}
             </div>
-            <Button
-              variant="outline"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
           </div>
 
           {/* Stats Cards */}

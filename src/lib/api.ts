@@ -17,6 +17,8 @@ export interface VoteResult {
   party: string;
   votes: number;
   percentage: number;
+  election_id?: number;
+  category_id?: number;
 }
 
 export interface LoginCredentials {
@@ -140,8 +142,8 @@ export const votingApi = {
       }),
     }),
 
-  getResults: () =>
-    apiRequest<VoteResult[]>("/result/"),
+  getResults: (electionId?: number) =>
+    apiRequest<VoteResult[]>(electionId ? `/result/?election_id=${electionId}` : "/result/"),
 };
 
 // Election API
