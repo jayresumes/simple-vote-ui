@@ -31,6 +31,7 @@ const Vote = () => {
   const [selections, setSelections] = useState<Record<number, number>>({});
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -209,7 +210,7 @@ const Vote = () => {
             )}
 
             {/* Sequential Category Voting */}
-            {selectedElection && currentCategory && !allCategoriesSelected && (
+            {selectedElection && currentCategory && (!allCategoriesSelected || isReviewing) && (
               <div className="space-y-4 animate-fade-in" key={currentCategory.id}>
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -251,13 +252,23 @@ const Vote = () => {
                     <ChevronLeft className="h-4 w-4 mr-1" />
                     {currentCategoryIndex === 0 ? "Change Election" : "Previous"}
                   </Button>
-                  <Button
-                    onClick={handleNextCategory}
-                    disabled={!selections[currentCategory.id]}
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
+                  {currentCategoryIndex < electionCategories.length - 1 ? (
+                    <Button
+                      onClick={handleNextCategory}
+                      disabled={!selections[currentCategory.id]}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  ) : (
+                    <Button
+                      disabled={!selections[currentCategory.id]}
+                      onClick={() => setIsReviewing(false)}
+                    >
+                      Done Reviewing
+                      <CheckCircle2 className="h-4 w-4 ml-1" />
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
@@ -271,7 +282,7 @@ const Vote = () => {
                   You've made selections in all {electionCategories.length} categories. Review and submit your votes.
                 </p>
                 <div className="flex justify-center gap-3 pt-4">
-                  <Button variant="outline" onClick={() => { setCurrentCategoryIndex(0); }}>
+                  <Button variant="outline" onClick={() => { setCurrentCategoryIndex(0); setIsReviewing(true); }}>
                     Review Categories
                   </Button>
                   <Button variant="hero" size="lg" onClick={() => setShowSummaryDialog(true)}>
