@@ -12,13 +12,12 @@ export interface Candidate {
 }
 
 export interface VoteResult {
-  candidate_id: string;
+  candidate: number;
   candidate_name: string;
-  party: string;
+  category: number;
+  category_name: string;
+  election: number;
   votes: number;
-  percentage: number;
-  election_id?: number;
-  category_id?: number;
 }
 
 export interface LoginCredentials {

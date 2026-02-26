@@ -94,19 +94,22 @@ const Results = () => {
     setSelectedElectionId(Number(value));
   };
 
-  // Get categories for selected election
-  const electionCategories = categories.filter(
-    (c) => c.election === selectedElectionId
-  );
+  // Group results by category from the results data itself
+  const categoryMap = new Map<number, { name: string; results: VoteResult[] }>();
+  results.forEach((r) => {
+    if (!categoryMap.has(r.category)) {
+      categoryMap.set(r.category, { name: r.category_name, results: [] });
+    }
+    categoryMap.get(r.category)!.results.push(r);
+  });
 
-  // Group results by category
-  const resultsByCategory = electionCategories.map((category) => {
-    const categoryResults = results.filter((r) => r.category_id === category.id);
+  const resultsByCategory = Array.from(categoryMap.entries()).map(([categoryId, { name, results: categoryResults }]) => {
     const categoryTotalVotes = categoryResults.reduce((sum, c) => sum + c.votes, 0);
     const sortedResults = [...categoryResults].sort((a, b) => b.votes - a.votes);
     const winner = sortedResults[0];
     return {
-      category,
+      categoryId,
+      categoryName: name,
       results: sortedResults,
       totalVotes: categoryTotalVotes,
       winner,
@@ -226,7 +229,7 @@ const Results = () => {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Categories</p>
-                      <p className="font-semibold text-foreground">{electionCategories.length}</p>
+                      <p className="font-semibold text-foreground">{resultsByCategory.length}</p>
                     </div>
                   </div>
                 </div>
@@ -251,13 +254,13 @@ const Results = () => {
                 </div>
               ) : (
                 <div className="space-y-8">
-                  {resultsByCategory.map(({ category, results: categoryResults, totalVotes: categoryTotal, winner }) => (
-                    <div key={category.id} className="rounded-xl border border-border bg-card p-6 shadow-soft">
+                  {resultsByCategory.map(({ categoryId, categoryName, results: categoryResults, totalVotes: categoryTotal, winner }) => (
+                    <div key={categoryId} className="rounded-xl border border-border bg-card p-6 shadow-soft">
                       <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <BarChart3 className="h-5 w-5 text-primary" />
                           <h2 className="text-xl font-semibold text-foreground">
-                            {category.name}
+                            {categoryName}
                           </h2>
                         </div>
                         <Badge variant="secondary">
@@ -273,16 +276,16 @@ const Results = () => {
                         <div className="space-y-4">
                           {categoryResults.map((candidate, index) => (
                             <div
-                              key={candidate.candidate_id}
+                              key={candidate.candidate}
                               className="animate-slide-up"
                               style={{ animationDelay: `${index * 100}ms` }}
                             >
                               <ResultBar
                                 name={candidate.candidate_name}
-                                party={candidate.party}
+                                party={candidate.category_name}
                                 votes={candidate.votes}
                                 totalVotes={categoryTotal}
-                                isWinner={candidate.candidate_id === winner?.candidate_id}
+                                isWinner={candidate.candidate === winner?.candidate}
                               />
                             </div>
                           ))}
