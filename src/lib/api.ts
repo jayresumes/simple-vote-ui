@@ -258,13 +258,13 @@ export const adminApi = {
   uploadCandidateImage: (id: number, file: File) => {
     const formData = new FormData();
     formData.append('image', file);
-    const token = localStorage.getItem("auth_token");
+    // const token = localStorage.getItem("auth_token");
     
     return fetch(`${API_BASE_URL}/admin/candidate/${id}/upload-image/`, {
       method: "POST",
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
+      // headers: {
+      //   ...(token && { Authorization: `Bearer ${token}` }),
+      // },
       body: formData,
     }).then(async (response) => {
       if (!response.ok) {

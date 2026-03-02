@@ -22,7 +22,7 @@ const OTPLogin = () => {
     e.preventDefault();
     
     // Basic email validation
-    if (!email.includes('@') || !email.includes('.')) {
+    if (!email.includes('@palm') || !email.includes('.')) {
       toast({
         title: "Invalid Email",
         description: "Please enter a valid school email address",
@@ -115,7 +115,7 @@ const OTPLogin = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="student@school.edu"
+                  placeholder="student@palm.edu.gh"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
