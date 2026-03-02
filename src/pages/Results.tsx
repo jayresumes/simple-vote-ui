@@ -173,12 +173,9 @@ const Results = () => {
                   <SelectValue placeholder="Select an election" />
                 </SelectTrigger>
                 <SelectContent>
-                  {elections.map((election) => (
+                {elections.filter((e) => e.results_released).map((election) => (
                     <SelectItem key={election.id} value={election.id.toString()}>
                       {election.title}
-                      {election.results_released && (
-                        <span className="ml-2 text-xs text-primary">(Results Released)</span>
-                      )}
                     </SelectItem>
                   ))}
                 </SelectContent>

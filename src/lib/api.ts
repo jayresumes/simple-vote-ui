@@ -117,6 +117,12 @@ export const authApi = {
       body: JSON.stringify(credentials),
     }),
 
+  googleLogin: (token: string) =>
+    apiRequest<AuthResponse>("/auth/google/", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
+
   logout: () =>
     apiRequest<void>("/auth/logout/", {
       method: "POST",
