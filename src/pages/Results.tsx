@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { BarChart3, Users, Clock, RefreshCw, Loader2, CalendarDays } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { BarChart3, Users, Clock, RefreshCw, Loader2, CalendarDays, LogIn } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,6 +24,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 const Results = () => {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [results, setResults] = useState<VoteResult[]>([]);
   const [elections, setElections] = useState<Election[]>([]);
   const [selectedElectionId, setSelectedElectionId] = useState<number | null>(null);
@@ -29,6 +32,7 @@ const Results = () => {
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const selectedElection = elections.find((e) => e.id === selectedElectionId) || null;
@@ -128,11 +132,29 @@ const Results = () => {
       })
     : null;
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <Layout>
         <div className="container py-20 flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Layout>
+        <div className="container py-20">
+          <div className="mx-auto max-w-md text-center rounded-xl border border-border bg-card p-8 shadow-soft">
+            <LogIn className="h-12 w-12 text-primary mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-foreground mb-2">Login Required</h2>
+            <p className="text-muted-foreground mb-6">You must be signed in to view results.</p>
+            <Button variant="hero" onClick={() => navigate("/login")} className="gap-2">
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Button>
+          </div>
         </div>
       </Layout>
     );
