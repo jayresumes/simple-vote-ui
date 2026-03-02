@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, CheckCircle2, Loader2, ChevronRight, ChevronLeft } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, ChevronRight, ChevronLeft, LogIn } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Layout from "@/components/layout/Layout";
@@ -20,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { votingApi, electionApi, categoryApi, type Candidate, type Election, type Category } from "@/lib/api";
 
 const Vote = () => {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [elections, setElections] = useState<Election[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -27,7 +29,6 @@ const Vote = () => {
 
   const [selectedElection, setSelectedElection] = useState<number | null>(null);
   const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
-  // Map of categoryId -> candidateId
   const [selections, setSelections] = useState<Record<number, number>>({});
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,6 +36,9 @@ const Vote = () => {
 
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Only show active elections
+  const activeElections = useMemo(() => elections.filter((e) => e.status === "active"), [elections]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -139,11 +143,29 @@ const Vote = () => {
     }
   };
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <Layout>
         <div className="container py-20 flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Layout>
+        <div className="container py-20">
+          <div className="mx-auto max-w-md text-center rounded-xl border border-border bg-card p-8 shadow-soft">
+            <LogIn className="h-12 w-12 text-primary mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-foreground mb-2">Login Required</h2>
+            <p className="text-muted-foreground mb-6">You must be signed in to vote.</p>
+            <Button variant="hero" onClick={() => navigate("/login")} className="gap-2">
+              <LogIn className="h-4 w-4" />
+              Sign In to Vote
+            </Button>
+          </div>
         </div>
       </Layout>
     );
@@ -180,11 +202,11 @@ const Vote = () => {
             {!selectedElection && (
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold text-foreground mb-4">Select an Election</h2>
-                {elections.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No elections available at this time.</p>
+                {activeElections.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No active elections at this time.</p>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2">
-                    {elections.map((election, index) => (
+                    {activeElections.map((election, index) => (
                       <div
                         key={election.id}
                         className="animate-slide-up cursor-pointer rounded-lg border border-border bg-card p-4 hover:border-primary/50 hover:shadow-md transition-all"

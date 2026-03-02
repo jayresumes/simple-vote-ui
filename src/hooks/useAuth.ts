@@ -41,6 +41,13 @@ export function useAuth() {
     return response;
   };
 
+  const googleLogin = async (token: string) => {
+    const response = await authApi.googleLogin(token);
+    setAuthToken(response.token);
+    setState({ user: response.user, isLoading: false, isAuthenticated: true });
+    return response;
+  };
+
   const logout = async () => {
     try {
       await authApi.logout();
@@ -54,6 +61,7 @@ export function useAuth() {
   return {
     ...state,
     login,
+    googleLogin,
     logout,
     checkAuth,
   };
