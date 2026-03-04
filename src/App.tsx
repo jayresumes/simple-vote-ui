@@ -7,10 +7,12 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import OTPLogin from "./pages/OTPLogin";
+import AdminLogin from "./pages/AdminLogin";
 import Vote from "./pages/Vote";
 import Confirmation from "./pages/Confirmation";
 import Results from "./pages/Results";
 import Admin from "./pages/Admin";
+import AdminRoute from "./components/AdminRoute";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,11 +28,11 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<OTPLogin />} />
-            <Route path="/admin-login" element={<Login />} />
+            <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/vote" element={<Vote />} />
             <Route path="/confirmation" element={<Confirmation />} />
             <Route path="/results" element={<Results />} />
-            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

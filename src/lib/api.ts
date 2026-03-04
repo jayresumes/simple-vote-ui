@@ -41,7 +41,15 @@ export interface AuthResponse {
     email: string;
     name: string;
     has_voted: boolean;
+    is_staff: boolean;
   };
+}
+
+export interface UserRecord {
+  id: string;
+  email: string;
+  username?: string;
+  is_staff: boolean;
 }
 
 export interface VoteReceipt {
@@ -123,6 +131,12 @@ export const authApi = {
       body: JSON.stringify({ token }),
     }),
 
+  adminLogin: (credentials: LoginCredentials) =>
+    apiRequest<AuthResponse>("/auth/admin-login/", {
+      method: "POST",
+      body: JSON.stringify(credentials),
+    }),
+
   logout: () =>
     apiRequest<void>("/auth/logout/", {
       method: "POST",
@@ -130,6 +144,15 @@ export const authApi = {
 
   getUser: () =>
     apiRequest<AuthResponse["user"]>("/auth/user/"),
+
+  getUsers: () =>
+    apiRequest<UserRecord[]>("/auth/users/"),
+
+  updateUser: (id: string, data: Partial<UserRecord>) =>
+    apiRequest<UserRecord>(`/auth/users/${id}/`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
 };
 
 // Voting API

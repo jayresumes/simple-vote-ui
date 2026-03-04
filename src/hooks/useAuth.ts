@@ -58,9 +58,20 @@ export function useAuth() {
     setState({ user: null, isLoading: false, isAuthenticated: false });
   };
 
+  const isAdmin = state.user?.is_staff ?? false;
+
+  const adminLogin = async (email: string, password: string) => {
+    const response = await authApi.adminLogin({ email, password });
+    setAuthToken(response.token);
+    setState({ user: response.user, isLoading: false, isAuthenticated: true });
+    return response;
+  };
+
   return {
     ...state,
+    isAdmin,
     login,
+    adminLogin,
     googleLogin,
     logout,
     checkAuth,

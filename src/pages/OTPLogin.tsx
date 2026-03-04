@@ -120,6 +120,13 @@ const OTPLogin = () => {
               Contact your school administrator if you have issues signing in.
             </p>
           </div>
+
+          <p className="text-center text-sm text-muted-foreground">
+            Admin?{" "}
+            <a href="/admin-login" className="text-primary hover:underline">
+              Admin Login
+            </a>
+          </p>
         </div>
       </div>
     </Layout>
