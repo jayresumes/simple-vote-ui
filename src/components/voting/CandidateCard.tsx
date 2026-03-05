@@ -34,14 +34,17 @@ const CandidateCard = ({
       )}
     >
       {isSelected && (
-        <div className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-primary animate-scale-in">
+        // <div className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-primary animate-scale-in">
+        <div className="relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-200">
           <Check className="h-5 w-5 text-primary-foreground" />
         </div>
+       
+
       )}
 
       <div className="flex items-start gap-4">
         {/* <div className="h-9 w-18 overflow-hidden rounded-full bg-secondary flex-shrink-0"> */}
-        <div className="h-16 w-16 overflow-hidden rounded-full bg-secondary flex-shrink-0">
+        <div className="h-24 w-24 overflow-hidden rounded-full bg-secondary flex-shrink-0">
           {displayImage ? (
             <img
               src={displayImage}
