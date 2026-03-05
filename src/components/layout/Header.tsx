@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Vote, LogIn, BarChart3, Home, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -7,6 +7,13 @@ import { useAuth } from "@/hooks/useAuth";
 const Header = () => {
   const location = useLocation();
   const { user, isAdmin, logout } = useAuth();
+
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
   const navItems = [
     { path: "/", label: "Home", icon: Home },
@@ -60,7 +67,7 @@ const Header = () => {
         <div className="flex items-center gap-2">
           {user ? (
             <Button variant="outline" className="gap-2" onClick={logout}>
-              <span className="hidden sm:inline">{user.name}</span>
+              <span className="hidden sm:inline">{user.email}</span>
               <span className="sm:hidden">Logout</span>
             </Button>
           ) : (

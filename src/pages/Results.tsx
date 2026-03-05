@@ -101,10 +101,10 @@ const Results = () => {
   // Group results by category from the results data itself
   const categoryMap = new Map<number, { name: string; results: VoteResult[] }>();
   results.forEach((r) => {
-    if (!categoryMap.has(r.category)) {
-      categoryMap.set(r.category, { name: r.category_name, results: [] });
+    if (!categoryMap.has(r.category_id)) {
+      categoryMap.set(r.category_id, { name: r.category_name, results: [] });
     }
-    categoryMap.get(r.category)!.results.push(r);
+    categoryMap.get(r.category_id)!.results.push(r);
   });
 
   const resultsByCategory = Array.from(categoryMap.entries()).map(([categoryId, { name, results: categoryResults }]) => {
@@ -295,7 +295,7 @@ const Results = () => {
                         <div className="space-y-4">
                           {categoryResults.map((candidate, index) => (
                             <div
-                              key={candidate.candidate}
+                              key={candidate.candidate_id}
                               className="animate-slide-up"
                               style={{ animationDelay: `${index * 100}ms` }}
                             >
@@ -304,7 +304,7 @@ const Results = () => {
                                 party={candidate.category_name}
                                 votes={candidate.votes}
                                 totalVotes={categoryTotal}
-                                isWinner={candidate.candidate === winner?.candidate}
+                                isWinner={candidate.candidate_id === winner?.candidate_id}
                               />
                             </div>
                           ))}

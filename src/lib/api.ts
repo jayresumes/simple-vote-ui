@@ -14,9 +14,9 @@ export interface Candidate {
 }
 
 export interface VoteResult {
-  candidate: number;
+  candidate_id: number;
   candidate_name: string;
-  category: number;
+  category_id: number;
   category_name: string;
   election: number;
   votes: number;
@@ -101,7 +101,7 @@ async function apiRequest<T>(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: "Request failed" }));
-    throw new Error(error.message || error.detail || "Request failed");
+    throw new Error(error.error || error.message || error.detail || "Request failed");
   }
 
   return response.json();

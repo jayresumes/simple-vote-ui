@@ -40,6 +40,7 @@ const CandidateCard = ({
       )}
 
       <div className="flex items-start gap-4">
+        {/* <div className="h-9 w-18 overflow-hidden rounded-full bg-secondary flex-shrink-0"> */}
         <div className="h-16 w-16 overflow-hidden rounded-full bg-secondary flex-shrink-0">
           {displayImage ? (
             <img

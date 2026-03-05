@@ -307,10 +307,10 @@ const Admin = () => {
   // Results grouping
   const categoryMap = new Map<number, { name: string; results: VoteResult[] }>();
   results.forEach((r) => {
-    if (!categoryMap.has(r.category)) {
-      categoryMap.set(r.category, { name: r.category_name, results: [] });
+    if (!categoryMap.has(r.category_id)) {
+      categoryMap.set(r.category_id, { name: r.category_name, results: [] });
     }
-    categoryMap.get(r.category)!.results.push(r);
+    categoryMap.get(r.category_id)!.results.push(r);
   });
   const resultsByCategory = Array.from(categoryMap.entries()).map(([categoryId, { name, results: catResults }]) => {
     const total = catResults.reduce((sum, c) => sum + c.votes, 0);
@@ -482,13 +482,13 @@ const Admin = () => {
                     </div>
                     <div className="space-y-3">
                       {catResults.map((c, i) => (
-                        <div key={c.candidate} className="animate-slide-up" style={{ animationDelay: `${i * 50}ms` }}>
+                        <div key={c.candidate_id} className="animate-slide-up" style={{ animationDelay: `${i * 50}ms` }}>
                           <ResultBar
                             name={c.candidate_name}
                             party={c.category_name}
                             votes={c.votes}
                             totalVotes={totalVotes}
-                            isWinner={c.candidate === winner?.candidate}
+                            isWinner={c.candidate_id === winner?.candidate_id}
                           />
                         </div>
                       ))}
