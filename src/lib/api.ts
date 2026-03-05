@@ -12,13 +12,12 @@ export interface Candidate {
 }
 
 export interface VoteResult {
-  candidate_id: string;
+  candidate: number;
   candidate_name: string;
-  party: string;
+  category: number;
+  category_name: string;
+  election: number;
   votes: number;
-  percentage: number;
-  election_id?: number;
-  category_id?: number;
 }
 
 export interface LoginCredentials {
@@ -116,6 +115,12 @@ export const authApi = {
     apiRequest<AuthResponse>("/auth/login/", {
       method: "POST",
       body: JSON.stringify(credentials),
+    }),
+
+  googleLogin: (token: string) =>
+    apiRequest<AuthResponse>("/auth/google/", {
+      method: "POST",
+      body: JSON.stringify({ token }),
     }),
 
   logout: () =>

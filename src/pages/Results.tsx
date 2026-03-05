@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { BarChart3, Users, Clock, RefreshCw, Loader2, CalendarDays } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { BarChart3, Users, Clock, RefreshCw, Loader2, CalendarDays, LogIn } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,6 +24,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 const Results = () => {
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [results, setResults] = useState<VoteResult[]>([]);
   const [elections, setElections] = useState<Election[]>([]);
   const [selectedElectionId, setSelectedElectionId] = useState<number | null>(null);
@@ -29,6 +32,7 @@ const Results = () => {
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const selectedElection = elections.find((e) => e.id === selectedElectionId) || null;
@@ -94,19 +98,22 @@ const Results = () => {
     setSelectedElectionId(Number(value));
   };
 
-  // Get categories for selected election
-  const electionCategories = categories.filter(
-    (c) => c.election === selectedElectionId
-  );
+  // Group results by category from the results data itself
+  const categoryMap = new Map<number, { name: string; results: VoteResult[] }>();
+  results.forEach((r) => {
+    if (!categoryMap.has(r.category)) {
+      categoryMap.set(r.category, { name: r.category_name, results: [] });
+    }
+    categoryMap.get(r.category)!.results.push(r);
+  });
 
-  // Group results by category
-  const resultsByCategory = electionCategories.map((category) => {
-    const categoryResults = results.filter((r) => r.category_id === category.id);
+  const resultsByCategory = Array.from(categoryMap.entries()).map(([categoryId, { name, results: categoryResults }]) => {
     const categoryTotalVotes = categoryResults.reduce((sum, c) => sum + c.votes, 0);
     const sortedResults = [...categoryResults].sort((a, b) => b.votes - a.votes);
     const winner = sortedResults[0];
     return {
-      category,
+      categoryId,
+      categoryName: name,
       results: sortedResults,
       totalVotes: categoryTotalVotes,
       winner,
@@ -125,11 +132,29 @@ const Results = () => {
       })
     : null;
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <Layout>
         <div className="container py-20 flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Layout>
+        <div className="container py-20">
+          <div className="mx-auto max-w-md text-center rounded-xl border border-border bg-card p-8 shadow-soft">
+            <LogIn className="h-12 w-12 text-primary mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-foreground mb-2">Login Required</h2>
+            <p className="text-muted-foreground mb-6">You must be signed in to view results.</p>
+            <Button variant="hero" onClick={() => navigate("/login")} className="gap-2">
+              <LogIn className="h-4 w-4" />
+              Sign In
+            </Button>
+          </div>
         </div>
       </Layout>
     );
@@ -170,12 +195,9 @@ const Results = () => {
                   <SelectValue placeholder="Select an election" />
                 </SelectTrigger>
                 <SelectContent>
-                  {elections.map((election) => (
+                {elections.filter((e) => e.results_released).map((election) => (
                     <SelectItem key={election.id} value={election.id.toString()}>
                       {election.title}
-                      {election.results_released && (
-                        <span className="ml-2 text-xs text-primary">(Results Released)</span>
-                      )}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -226,7 +248,7 @@ const Results = () => {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Categories</p>
-                      <p className="font-semibold text-foreground">{electionCategories.length}</p>
+                      <p className="font-semibold text-foreground">{resultsByCategory.length}</p>
                     </div>
                   </div>
                 </div>
@@ -251,13 +273,13 @@ const Results = () => {
                 </div>
               ) : (
                 <div className="space-y-8">
-                  {resultsByCategory.map(({ category, results: categoryResults, totalVotes: categoryTotal, winner }) => (
-                    <div key={category.id} className="rounded-xl border border-border bg-card p-6 shadow-soft">
+                  {resultsByCategory.map(({ categoryId, categoryName, results: categoryResults, totalVotes: categoryTotal, winner }) => (
+                    <div key={categoryId} className="rounded-xl border border-border bg-card p-6 shadow-soft">
                       <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <BarChart3 className="h-5 w-5 text-primary" />
                           <h2 className="text-xl font-semibold text-foreground">
-                            {category.name}
+                            {categoryName}
                           </h2>
                         </div>
                         <Badge variant="secondary">
@@ -273,16 +295,16 @@ const Results = () => {
                         <div className="space-y-4">
                           {categoryResults.map((candidate, index) => (
                             <div
-                              key={candidate.candidate_id}
+                              key={candidate.candidate}
                               className="animate-slide-up"
                               style={{ animationDelay: `${index * 100}ms` }}
                             >
                               <ResultBar
                                 name={candidate.candidate_name}
-                                party={candidate.party}
+                                party={candidate.category_name}
                                 votes={candidate.votes}
                                 totalVotes={categoryTotal}
-                                isWinner={candidate.candidate_id === winner?.candidate_id}
+                                isWinner={candidate.candidate === winner?.candidate}
                               />
                             </div>
                           ))}
