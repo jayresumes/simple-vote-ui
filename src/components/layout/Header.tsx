@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const Header = () => {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
 
   const navItems = [
     { path: "/", label: "Home", icon: Home },
@@ -41,7 +41,7 @@ const Header = () => {
               </Button>
             </Link>
           ))}
-          {user?.email?.includes('@admin') && (
+          {isAdmin && (
             <Link to={adminNavItem.path}>
               <Button
                 variant="ghost"
