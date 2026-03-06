@@ -26,12 +26,22 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
+        {/* <Link to="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
             <Vote className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="text-xl font-bold text-foreground">eVote</span>
-        </Link>
+          <span className="text-xl font-bold text-foreground">Palm eVote</span>
+        </Link> */}
+        <Link to="/" className="flex items-center gap-2">
+  <div className="flex h-9 w-9 items-center justify-center rounded-lg overflow-hidden">
+    <img
+      src="/logo.png"
+      alt="Palm eVote Logo"
+      className="h-full w-full object-contain"
+    />
+  </div>
+  <span className="text-xl font-bold text-foreground">Palm eVote</span>
+</Link>
 
         <nav className="hidden md:flex items-center gap-1">
           {navItems.map((item) => (
