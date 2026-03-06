@@ -7,12 +7,13 @@ import { type VoteReceipt } from "@/lib/api";
 const Confirmation = () => {
   const location = useLocation();
   const receipt = location.state?.receipt as VoteReceipt | undefined;
+  const electionTitle = (location.state?.electionTitle as string) || "N/A";
 
   const voteDetails = {
     confirmationNumber: receipt?.receipt_id || "N/A",
     candidateName: receipt?.candidate_name || "N/A",
     timestamp: receipt?.timestamp || new Date().toLocaleString(),
-    election: "Presidential Election 2024",
+    election: electionTitle,
   };
 
   return (
