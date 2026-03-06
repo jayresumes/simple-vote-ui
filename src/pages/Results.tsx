@@ -77,8 +77,12 @@ const Results = () => {
   };
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
     fetchElections();
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (selectedElectionId) {
@@ -305,6 +309,7 @@ const Results = () => {
                                 votes={candidate.votes}
                                 totalVotes={categoryTotal}
                                 isWinner={candidate.candidate_id === winner?.candidate_id}
+                                imageUrl={candidate.candidate_image}
                               />
                             </div>
                           ))}

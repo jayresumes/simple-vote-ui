@@ -41,6 +41,10 @@ const Vote = () => {
   const activeElections = useMemo(() => elections.filter((e) => e.status === "active"), [elections]);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
     const fetchData = async () => {
       try {
         const [candidatesData, electionsData, categoriesData] = await Promise.all([
@@ -62,7 +66,7 @@ const Vote = () => {
       }
     };
     fetchData();
-  }, [toast]);
+  }, [toast, isAuthenticated]);
 
   const electionCategories = useMemo(
     () => categories.filter((c) => c.election === selectedElection),

@@ -16,6 +16,7 @@ export interface Candidate {
 export interface VoteResult {
   candidate_id: number;
   candidate_name: string;
+  candidate_image?: string;
   category_id: number;
   category_name: string;
   election: number;

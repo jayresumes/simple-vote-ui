@@ -44,7 +44,7 @@ const CandidateCard = ({
 
       <div className="flex items-start gap-4">
         {/* <div className="h-9 w-18 overflow-hidden rounded-full bg-secondary flex-shrink-0"> */}
-        <div className="h-24 w-24 overflow-hidden rounded-full bg-secondary flex-shrink-0">
+        <div className="h-32 w-32 overflow-hidden rounded-full bg-secondary flex-shrink-0">
           {displayImage ? (
             <img
               src={displayImage}
