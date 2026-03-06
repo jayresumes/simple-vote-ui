@@ -135,7 +135,8 @@ const Vote = () => {
         title: "Vote Submitted Successfully!",
         description: "Thank you for participating in the election.",
       });
-      navigate("/confirmation", { state: { receipt: lastReceipt } });
+      const electionTitle = elections.find((e) => e.id === selectedElection)?.title || "Election";
+      navigate("/confirmation", { state: { receipt: lastReceipt, electionTitle } });
     } catch (error) {
       toast({
         title: "Vote Failed",
